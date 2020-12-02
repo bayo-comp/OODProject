@@ -1,70 +1,31 @@
-/////////////////////// Command Code ////////////////////////////////////////
-public interface RegisterCommand {
-    public void execute(String s, int quantity);
-}
+package mong;
 
-
-public class SaleCommand implements RegisterCommand {
-    Transactions transaction;
-    public SaleCommand(Transactions transaction){
-        this.transaction = transaction;
-    }
-    public void execute(String s, int quantity){
-        transaction.sell(s,quantity);
-    }
-    
-}
-
-import java.util.*;
-
-public class Register {
-    RegisterCommand input;
-    static double price;
-
-    public void setCommand(RegisterCommand command){
-
-        input = command;
-    }
-
-    public static double getPrice() {
-        return price;
-    }
-    public void setPrice(double price){
-        this.price = price;
-    }
-
-    public void processTransaction(String item, int quantity){
-
-        input.execute(item,quantity);
-    }
-}
-
-
-public class Transactions {
-    double price;
-    public String sell(String s, int quantity){
-        this.price =  Register.getPrice();
-        People.add(s,quantity);
-        return "The "+ s+" has been sold for "+ price;
-    }
-
+abstract class AddOn extends Device {
+    public abstract String getAdditionalInfo(String s);
 }
 
 
 
-/////////////////////// Decorator Code ////////////////////////////////////////
+package mong;
+
+public class databaseGUI {
+}
+
+package mong;
+
 abstract class Device {
     String description = "Unknown item";
     public String getDescription(){
         return description;
     }
     public abstract String getAdditionalInfo(String s);
-    
+    public abstract String statement(String s);
+
 }
-abstract class AddOn extends Device {
-        public abstract String getAdditionalInfo(String s);
-    }
-    
+
+
+package mong;
+
 import java.util.ArrayList;
 
 public class Devices extends Device{
@@ -74,7 +35,9 @@ public class Devices extends Device{
         arr.add(s);
         for(int i=0;i<arr.size();i++){
             if (s.equals(arr.get(i))){
-               System.out.println(statement(s));
+                //System.out.println(statement(s));
+                //getAdditionalInfo(s);
+               // statement(s);
             }
         }
 
@@ -87,8 +50,9 @@ public class Devices extends Device{
     public String statement(String s){
         return "This "+s+" will be a wonderful addition to your home";
     }
-    
+
 }
+
 
 
 class ProtectionPlan extends AddOn {
@@ -99,9 +63,224 @@ class ProtectionPlan extends AddOn {
 
     public String getAdditionalInfo(String s){
         return device.getAdditionalInfo(s) + ".\nThe protection plan will guarantee a replacement if"+
-        " broken or damaged";
+                " broken or damaged";
+    }
+
+    public String statement(String s){
+        return "This "+s+" will be a wonderful addition to your purchased plan";
     }
 }
+
+
+
+
+package mong;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+public class Guest extends People {
+    static HashMap<String, Integer> map = new HashMap<String,Integer>();
+
+    public Guest(String[] arr) {
+        super(arr);
+    }
+
+    public static void add(String s, int quantity){
+        if(map.containsKey(s)) {
+            int newQuantity = quantity+map.get(s);
+            map.put(s,newQuantity);
+        }
+        else{
+            map.put(s, quantity);
+        }
+    }
+    public static void remove (String s, int quantity){
+        int q = map.get(s);
+        if(q>quantity){
+            map.replace(s,q-quantity);
+        }
+        else{
+            map.remove(s);
+        }
+
+    }
+    public void printItems() {
+        System.out.println(map);
+    }
+}
+
+
+package mong;
+
+import org.bson.Document;
+
+import java.util.List;
+
+public class Listtest {
+
+
+    List<Document>a1;
+
+    Listtest(){
+
+    }
+
+
+
+public List<Document> setlist(List<Document> a1){
+    this.a1=a1;
+    return a1;
+
+
+
+}
+
+}
+
+
+
+package mong;
+
+
+import java.util.List;
+
+
+
+import com.mongodb.*;
+import com.mongodb.async.SingleResultCallback;
+import com.mongodb.client.*;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.pojo.PojoCodecProvider;
+
+import java.util.*;
+
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.concurrent.CountDownLatch;
+
+import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
+
+
+public class mMongo {
+    /*
+        mongoClient = MongoClients.create("mongodb://localhost:27017");
+    */
+    public static void main(String[] args) throws InterruptedException {
+
+
+        CountDownLatch latch = new CountDownLatch(1);
+        // connect to the local database server,default:127.0.0.1:27017
+        MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
+        // get handle to "testDB" database
+        MongoDatabase database = (MongoDatabase) mongoClient.getDatabase("Tech2Go");
+
+        //code below will help with timing.
+        SingleResultCallback<Void> callbackWhenFinished = new SingleResultCallback<Void>() {
+            @Override
+            public void onResult(final Void result, final Throwable t) {
+                System.out.println("Operation Finished!");
+                latch.countDown();
+            }
+        };
+
+    /*
+
+    What's actually happening is the main method is finishing before your call to the database finishes.
+If you alter your code to wait for the results to come back before terminating, you get a much more reasonable result.
+     */
+        // get a handle to the "test" collection
+        MongoCollection<Document> collection = database.getCollection("Addon");
+
+        System.out.println("Collection completed");
+        collection.updateOne(Filters.eq("Product", "Insurance Package 1"), Updates.set("Price", 50.00 - 6));
+        /*Update value works for the database*/
+
+        FindIterable<Document> iterDoc = collection.find();
+/*collection.find, finds all the documents in the selection and stores it in the employee list*/
+        List<Document> employees = (List<Document>) collection.find().into(
+                new ArrayList<Document>());
+
+        /*for gui maybe creating a method to store the values of the employee documents*/
+
+        for (Document employee : employees) {
+                /*prints out the values of the employee Document, through each iteration*/
+                System.out.println("name = " + employee.getString("Warranty period")
+                        + " course details below");
+                System.out.println("course name = " + employee.getString("Product"));
+                System.out.println("cours type = " + employee.getDouble("Price"));
+                  /*if the product name in the collection equals the hard coded syntax, then the code was sucessful*/
+                if(employee.getString("Product").equals("Insurance Package 1")){
+                    System.out.println("Test sucedded");
+                }
+            }
+        }
+
+    }
+
+package mong;
+
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
+
+public class NotifyTransactions {
+    public static final String FIRSTNAME = "firstName";
+    private List<Amount> Amounts = new ArrayList<Amount>();
+    private List<PropertyChangeListener> listener = new ArrayList<PropertyChangeListener>();
+    static double value = 1000;
+    public class Amount {
+        private double money;
+        public Amount(double money) {
+            this.money = money;
+        }
+
+        public double getMoney() {
+            return money;
+        }
+
+        public void setMoney(double money) {
+            notifyListeners(this,"Money",this.money,this.money = money);
+        }
+
+    }
+
+    public List<Amount> getAmounts() {
+        return Amounts;
+    }
+    public void setValue(double value) {
+        this.value = value;
+    }
+    public double getValue() {
+        return value;
+    }
+
+
+    public NotifyTransactions() {
+        Amounts.add(new Amount(value));
+    }
+
+    private void notifyListeners(Object object, String property, double oldValue, double newValue) {
+        for (PropertyChangeListener name : listener) {
+            name.propertyChange(new PropertyChangeEvent(this, property, oldValue, newValue));
+        }
+        this.value = newValue;
+    }
+
+    public void addChangeListener(PropertyChangeListener newListener) {
+        listener.add(newListener);
+    }
+
+}
+
+package mong;
 
 import java.util.*;
 public class People {
@@ -191,112 +370,128 @@ public class People {
         this.username = username;
     }
 }
-import java.util.ArrayList;
-import java.util.HashMap;
+
+
+package mong;
+import com.mongodb.MongoClient;
+import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.pojo.PojoCodecProvider;
+import org.bson.types.ObjectId;
+//import org.json.simple.JSONObject;
 import java.util.List;
 
-public class Guest extends People {
-    static HashMap<String, Integer> map = new HashMap<String,Integer>();
+import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
+import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 
-    public Guest(String[] arr) {
-        super(arr);
-    }
+//@Document
+public class Pojo {
 
-    public static void add(String s, int quantity){
-        if(map.containsKey(s)) {
-            int newQuantity = quantity+map.get(s);
-            map.put(s,newQuantity);
-        }
-        else{
-            map.put(s, quantity);
-        }
-    }
-    public static void remove (String s, int quantity){
-        int q = map.get(s);
-        if(q>quantity){
-            map.replace(s,q-quantity);
-        }
-        else{
-            map.remove(s);
-        }
+    private ObjectId _id;
+    private String Product;
+    private int price;
+    private String Description;
+    private String WarrantyPeriod;
+    private List<String> habilidades;
+
+    public Pojo(ObjectId _id, String Product, int price, String Description, String WarrantyPeriod, List<String> habilidades) {
+        super();
+        this._id = _id;
+        this.Product = Product;
+        this.price = price;
+        this.Description = Description;
+        this.WarrantyPeriod = WarrantyPeriod;
 
     }
-    public void printItems() {
-        System.out.println(map);
+    //@PostMapping("/insert")
+    /*
+    public void insert(@RequestBody String doc) {
+        try {
+            JSONObject jsonObject = (JSONObject) new JSONParser().parse(doc);
+            JSONObject obj = (JSONObject) jsonObject.get("_id");
+            JSONArray array = (JSONArray) jsonObject.get("habilidades");
+            Empleado empleado = new Empleado((ObjectId) obj.get("$oid"),
+                    Integer.parseInt(jsonObject.get("id").toString()), jsonObject.get("nombre").toString(),
+                    jsonObject.get("apellido").toString(), Integer.parseInt(jsonObject.get("edad").toString()),
+                    Integer.parseInt(jsonObject.get("sueldo").toString()), array);
+            // do something using getters and setters
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+*/
+
+
+
+
+
+
+
+
+
+
+    // Getters and Setters
+
+    public static void main(String[]args){
+
+        CodecRegistry pojoCodecRegistry = fromRegistries(MongoClient.getDefaultCodecRegistry(),
+                fromProviders(PojoCodecProvider.builder().automatic(true).build()));
+
+
+
+    }
+
+
+}
+package mong;
+
+import java.util.*;
+
+public class Register {
+    RegisterCommand input;
+    static double price;
+
+    public void setCommand(RegisterCommand command){
+
+        input = command;
+    }
+
+    public static double getPrice() {
+        return price;
+    }
+    public void setPrice(double price){
+        this.price = price;
+    }
+
+    public void processTransaction(String item, int quantity){
+
+        input.execute(item,quantity);
     }
 }
 
+package mong;
 
-/////////////////////// Observer Code ////////////////////////////////////////
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.List;
+interface RegisterCommand {
+    public void execute(String s, int quantity);
+}
 
-public class NotifyTransactions {
-    public static final String FIRSTNAME = "firstName";
-    private List<Amount> Amounts = new ArrayList<Amount>();
-    private List<PropertyChangeListener> listener = new ArrayList<PropertyChangeListener>();
-    static double value = 2842020;
-    public class Amount {
-        private double money;
-        public Amount(double money) {
-            this.money = money;
-        }
 
-        public double getMoney() {
-            return money;
-        }
+package mong;
 
-        public void setMoney(double money) {
-            notifyListeners(this,"Money",this.money,this.money = money);
-        }
+public class SaleCommand implements RegisterCommand {
+    Transactions transaction;
 
+    public SaleCommand(Transactions transaction) {
+        this.transaction = transaction;
     }
 
-    public List<Amount> getAmounts() {
-        return Amounts;
-    }
-    public void setValue(double value) {
-    this.value = value;
-    }
-    public double getValue() {
-    return value;
-    }
-
-
-    public NotifyTransactions() {
-        Amounts.add(new Amount(value));
-    }
-
-    private void notifyListeners(Object object, String property, double oldValue, double newValue) {
-        for (PropertyChangeListener name : listener) {
-            name.propertyChange(new PropertyChangeEvent(this, property, oldValue, newValue));
-        }
-       this.value = newValue;
-    }
-
-    public void addChangeListener(PropertyChangeListener newListener) {
-        listener.add(newListener);
+    public void execute(String s, int quantity) {
+        transaction.sell(s, quantity);
     }
 
 }
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
-public class StoreObserver implements PropertyChangeListener {
-    public StoreObserver(NotifyTransactions model) {
-        model.addChangeListener(this);
-    }
+package mong;
 
-    public void propertyChange(PropertyChangeEvent event) {
-        System.out.println( "Before Transaction: "+"$"+event.getOldValue() +"\n"+ "After Transaction: "
-        +"$"+event.getNewValue());
-    }
-}
-
-/////////////////////// Facade Code ////////////////////////////////////////
 import java.util.List;
 
 public class StoreFacade {
@@ -314,8 +509,12 @@ public class StoreFacade {
         r.setCommand(s);
         nt = new NotifyTransactions();
         so = new StoreObserver(nt);
-        a = nt.new Amount(2842020);
+        //chaning to a more logical quantity
+        //a = nt.new Amount(2842020);
+        a = nt.new Amount(1000);
+
     }
+
     public void setPrice(double price){
         r.setPrice(price);
     }
@@ -328,20 +527,65 @@ public class StoreFacade {
     }
     public void observerTransaction(){
         for (NotifyTransactions.Amount amount : nt.getAmounts()) {
+            //Added this new if statement. May change it.
+            if(amount.getMoney()>r.getPrice())
             amount.setMoney(amount.getMoney() - r.getPrice());
             if(amount.getMoney()<0){
+                //Shouldn't this be amount.getmoney<r.getPrice
                 System.out.println("You do not have enough money for this transaction");
                 return;
             }
         }
     }
-    public void description(String s){
+    //Made a change to description
+    public Device description(String s){
         d = new Devices(s);
+        return d;
+    }
+
+    public String DisplayAmount(){
+        return so.DisplayAmountObserver();
     }
 
 }
 
 
+
+package mong;
+
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+//Made changes
+public class StoreObserver implements PropertyChangeListener {
+    private double oldV;
+    private double newV;
+    public StoreObserver(NotifyTransactions model) {
+        model.addChangeListener(this);
+    }
+
+    public void propertyChange(PropertyChangeEvent event) {
+        System.out.println( "Before Transaction: "+"$"+event.getOldValue() +"\n"+ "After Transaction: "
+                +"$"+event.getNewValue());
+        this.oldV = (double)event.getOldValue();
+        this.newV = (double)event.getNewValue();
+
+    }
+    public String DisplayAmountObserver(){
+        if(newV>0)
+       return "Before Transaction: "+"$"+oldV +"\n"+ "After Transaction: "
+                +"$"+newV;
+        return "You cannot purchase this quantity you have $" + oldV +" USD";
+
+    }
 }
+package mong;
 
+public class Transactions {
+    double price;
+    public String sell(String s, int quantity){
+        this.price =  Register.getPrice();
+        People.add(s,quantity);
+        return "The "+ s+" has been sold for "+ price;
+    }
 
+}
