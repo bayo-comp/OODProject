@@ -427,6 +427,10 @@ public class OOD extends Application  {
             if (inv.get(0).getString("Product").equals(a)) {
                 //get the current value of the stock in the collections. subtract by quantity then update database.
                 int stock = inv.get(0).getInteger("Stock");
+                if(quantity<=0){
+                    textArea.setText("Sorry you cannot purchase less than 1 of any item. Please try again.");
+                    return false;
+                }
 
                 //conditonal to make sure stock does not go below 0
                 if (quantity <= stock) {
@@ -450,12 +454,12 @@ public class OOD extends Application  {
                 //close database because statement has updated.
                 return true;
             }
-        } else {
-            System.out.println("Error: Item is not found. Please make sure you entered the correct item name along with the quantity. " +
+        } /*else {
+          System.out.println("Error: Item is not found. Please make sure you entered the correct item name along with the quantity. " +
                     "Press List Items to see the details of all items in stock");
             textArea.setText("Error: Item is not found. Please make sure you entered the correct item name along with the quantity. " +
                     "\nPress List Items to see the details of all items in stock");
-        }
+        }*/
 
         List<Document> addOn = collectionAdd.find(Filters.eq("Product", a)).into(
                 new ArrayList<Document>());
@@ -466,6 +470,11 @@ public class OOD extends Application  {
                 int stock = addOn.get(0).getInteger("Stock");
 
                 //conditonal to make sure stock does not go below 0
+                if(quantity<=0){
+                    textArea.setText("You cannot purchase 0 or less than of an item. Try again.");
+                    return false;
+                }
+
                 if (quantity <= stock) {
                     stock = stock - quantity;
                 } else {
@@ -481,6 +490,10 @@ public class OOD extends Application  {
                 return true;
             }
         }
+        System.out.println("Error: Item is not found. Please make sure you entered the correct item name along with the quantity. " +
+                "Press List Items to see the details of all items in stock");
+        textArea.setText("Error: Item is not found. Please make sure you entered the correct item name along with the quantity. " +
+                "\nPress List Items to see the details of all items in stock");
 
         return false;
     }
@@ -599,7 +612,7 @@ public class OOD extends Application  {
         MongoDatabase database = mongoClient.getDatabase("Tech2Go");
         MongoCollection<org.bson.Document> collection = database.getCollection("Inventory");
         MongoCollection<org.bson.Document> collectionAddon = database.getCollection("Addon");
-        List<Document> addOn = collectionAddon.find(Filters.eq("product", a)).into(
+        List<Document> addOn = collectionAddon.find(Filters.eq("Product", a)).into(
                 new ArrayList<Document>());
         //code below will help with timing.
 
@@ -651,7 +664,7 @@ public class OOD extends Application  {
 
             if (inv.get(0).getString("Product").equals(a)) {
 
-                return String.format("Product: %s\n\n Price: %s\n Year Released: %s\n Stock: %s\n  Description: %s\n", inv.get(0).getString("Product"), inv.get(0).getDouble("Price"), inv.get(0).getInteger("YearReleased"), inv.get(0).getInteger("Stock"),inv.get(0).getString("Item_Description"));
+                return String.format("Product: %s\n\n Price: %s\n Year Released: %s\n Stock: %s\n Description: %s\n", inv.get(0).getString("Product"), inv.get(0).getDouble("Price"), inv.get(0).getInteger("YearReleased"), inv.get(0).getInteger("Stock"),inv.get(0).getString("Item_Description"));
             }
         }
 
@@ -659,7 +672,7 @@ public class OOD extends Application  {
                 new ArrayList<Document>());
         if (addOn.size() > 0) {
             if (addOn.get(0).getString("Product").equals(a)) {
-                return String.format("Product: %s\n Price: %s\n Year Released: %s\n Stock: %s\n    Description: %s\n", addOn.get(0).getString("Product"), addOn.get(0).getDouble("Price"), addOn.get(0).getInteger("YearReleased"), addOn.get(0).getInteger("Stock"),inv.get(0).getString("Description"));
+                return String.format("Product: %s\n Price: %s\n Year Released: %s\n Stock: %s\n Description: %s\n", addOn.get(0).getString("Product"), addOn.get(0).getDouble("Price"), addOn.get(0).getInteger("YearReleased"), addOn.get(0).getInteger("Stock"),addOn.get(0).getString("Description"));
 
             } else {
 
@@ -668,7 +681,7 @@ public class OOD extends Application  {
             }
 
         }
-        return a;
+        return "No results found for " + a + " in our inventory. Please try again.";
     }
 }
 
