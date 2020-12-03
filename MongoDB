@@ -233,6 +233,8 @@ public class OOD extends Application  {
 
                             //trymethod before I parse quantity
                             try {
+
+                                //method to retrieve all of user info
                                 String strquantity = TextField5.getText();
                                 String userinput = TextField3.getText();
                                 System.out.println(strquantity);
@@ -246,10 +248,22 @@ public class OOD extends Application  {
                                     //gets the value of price
                                     double price = searchPrice(userinput, quan);
                                     StoreFacade x = new StoreFacade();
+
+
+                                    People customer = new People( AccountConfirmation( username,  password));
+
+                                    //get the description of the item.
+                                     Devices d1= new Devices(userinput);
+
                                     x.setPrice(price);
                                     x.observerTransaction();
+
                                     x.processTransaction(TextField3.getText(), Integer.parseInt(TextField5.getText()));
                                     x.description(TextField3.getText());
+                                    //Purchase was sucessful and adding the items and quantity into the users Account
+                                    customer.add(userinput,quan);
+                                    ProtectionPlan p= new ProtectionPlan(d1);
+
                                     textArea.appendText("\n"+x.description(TextField3.getText()).getAdditionalInfo(TextField3.getText())+"\n");
                                     textArea.appendText(x.description(TextField3.getText()).statement(TextField3.getText())+"\n");
                                     textArea.appendText(x.DisplayAmount()+"\n");
@@ -440,7 +454,7 @@ public class OOD extends Application  {
                     //return false and print out the only stock avilable and ask user to input again
                     //Added in this line of code to make it make sense.
                     if(stock>1)
-                    textArea.setText("We only have " + stock+" units available. Please re-enter quantity");
+                        textArea.setText("We only have " + stock+" units available. Please re-enter quantity");
                     else
                         textArea.setText("We only have " + stock+" unit available. Please re-enter quantity");
 
@@ -684,5 +698,3 @@ public class OOD extends Application  {
         return "No results found for " + a + " in our inventory. Please try again.";
     }
 }
-
-
