@@ -292,11 +292,11 @@ public class People {
         this.firstname = arr[0];
         this.lastname = arr[1];
         this.email = arr[2];
-        this.address = arr[3];
-        this.password = arr[4];
-        this.billingAddress = arr[5];
-        this.shippingAddress=arr[6];
-        this.username = arr[7];
+        this.password = arr[3];
+        this.address = arr[4];
+        this.shippingAddress=arr[5];
+        this.username = arr[6];
+
     }
     public static void add(String s, int quantity){
         if(map.containsKey(s)) {
@@ -335,9 +335,7 @@ public class People {
     public String getPassword(){
         return password;
     }
-    public String getBillingAddress(){
-        return billingAddress;
-    }
+
     public String getShippingAddress(){
         return shippingAddress;
     }
@@ -360,9 +358,7 @@ public class People {
     public void setPassword(String password) {
         this.password = password;
     }
-    public void setBillingAddress(String billingAddress) {
-        this.billingAddress = billingAddress;
-    }
+
     public void setShippingAddress(String shippingAddress) {
         this.shippingAddress = shippingAddress;
     }
@@ -370,7 +366,6 @@ public class People {
         this.username = username;
     }
 }
-
 
 package mong;
 import com.mongodb.MongoClient;
